@@ -65,6 +65,9 @@ def includeme_other(config, plugin_map):
     LOGGER.info("Included openprocurement.auctions.rubble.other plugin",
                 extra={'MESSAGE_ID': 'included_plugin'})
 
+    # add accreditation level
+    config.registry.accreditation['auction'][RubbleOther._internal_type] = plugin_map['accreditation']
+
     # migrate data
     if plugin_map['migration'] and not os.environ.get('MIGRATION_SKIP'):
         get_evenly_plugins(config, plugin_map['plugins'], 'openprocurement.auctions.rubble.plugins')
@@ -79,6 +82,8 @@ def includeme_financial(config, plugin_map):
     for procurementMethodType in procurement_method_types:
         config.add_auction_procurementMethodType(RubbleFinancial,
                                                  procurementMethodType)
+        # add accreditation level
+        config.registry.accreditation['auction'][procurementMethodType] = plugin_map['accreditation']
 
     config.scan("openprocurement.auctions.rubble.views.financial")
 
@@ -101,6 +106,9 @@ def includeme_financial(config, plugin_map):
 
     LOGGER.info("Included openprocurement.auctions.rubble.financial plugin",
                 extra={'MESSAGE_ID': 'included_plugin'})
+
+    # add accreditation level
+    config.registry.accreditation['auction'][RubbleFinancial._internal_type] = plugin_map['accreditation']
 
     # migrate data
     if plugin_map['migration'] and not os.environ.get('MIGRATION_SKIP'):
