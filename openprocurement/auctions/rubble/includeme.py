@@ -19,6 +19,7 @@ from openprocurement.auctions.rubble.adapters import (
     AuctionRubbleFinancialManagerAdapter
 )
 from openprocurement.auctions.rubble.constants import (
+    DEFAULT_LEVEL_OF_ACCREDITATION,
     DEFAULT_PROCUREMENT_METHOD_TYPE_OTHER,
     DEFAULT_PROCUREMENT_METHOD_TYPE_FINANCIAL
 )
@@ -61,12 +62,14 @@ def includeme_other(config, plugin_map):
         IAuctionManager
     )
 
-
     LOGGER.info("Included openprocurement.auctions.rubble.other plugin",
                 extra={'MESSAGE_ID': 'included_plugin'})
 
     # add accreditation level
-    config.registry.accreditation['auction'][RubbleOther._internal_type] = plugin_map['accreditation']
+    if not plugin_map.get('accreditation'):
+        config.registry.accreditation['auction'][RubbleOther._internal_type] = DEFAULT_LEVEL_OF_ACCREDITATION
+    else:
+        config.registry.accreditation['auction'][RubbleOther._internal_type] = plugin_map['accreditation']
 
     # migrate data
     if plugin_map['migration'] and not os.environ.get('MIGRATION_SKIP'):
@@ -83,7 +86,10 @@ def includeme_financial(config, plugin_map):
         config.add_auction_procurementMethodType(RubbleFinancial,
                                                  procurementMethodType)
         # add accreditation level
-        config.registry.accreditation['auction'][procurementMethodType] = plugin_map['accreditation']
+        if not plugin_map.get('accreditation'):
+            config.registry.accreditation['auction'][procurementMethodType] = DEFAULT_LEVEL_OF_ACCREDITATION
+        else:
+            config.registry.accreditation['auction'][procurementMethodType] = plugin_map['accreditation']
 
     config.scan("openprocurement.auctions.rubble.views.financial")
 
@@ -108,7 +114,10 @@ def includeme_financial(config, plugin_map):
                 extra={'MESSAGE_ID': 'included_plugin'})
 
     # add accreditation level
-    config.registry.accreditation['auction'][RubbleFinancial._internal_type] = plugin_map['accreditation']
+    if not plugin_map.get('accreditation'):
+        config.registry.accreditation['auction'][RubbleFinancial._internal_type] = DEFAULT_LEVEL_OF_ACCREDITATION
+    else:
+        config.registry.accreditation['auction'][RubbleFinancial._internal_type] = plugin_map['accreditation']
 
     # migrate data
     if plugin_map['migration'] and not os.environ.get('MIGRATION_SKIP'):
