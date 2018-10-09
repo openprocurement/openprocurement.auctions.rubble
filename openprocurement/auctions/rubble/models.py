@@ -11,32 +11,37 @@ from zope.interface import implementer
 
 from openprocurement.auctions.core.includeme import IAwardingNextCheck
 from openprocurement.auctions.core.models import (
-    get_auction,
+    Administrator_role,
+    Auction as BaseAuction,
+    Bid as BaseBid,
+    FinancialOrganization,
+    IAuction,
+    IsoDateTimeType,
+    ListType,
     Lot,
     Period,
-    dgfCancellation,
-    validate_items_uniq,
-    validate_lots_uniq,
     auction_embedded_role,
-    IsoDateTimeType,
-    IAuction,
     calc_auction_end_time,
-    edit_role,
-    Administrator_role,
+    dgfCDB2Complaint,
     dgfCDB2Document,
     dgfCDB2Item,
-    dgfCDB2Complaint,
-    ListType,
+    dgfCancellation,
+    edit_role,
+    get_auction,
+    validate_items_uniq,
+    validate_lots_uniq,
     validate_not_available,
-    Bid as BaseBid,
-    Auction as BaseAuction,
-    FinancialOrganization
 )
 from openprocurement.auctions.core.plugins.awarding.v2_1.models import Award
 from openprocurement.auctions.core.plugins.contracting.v2_1.models import Contract
 from openprocurement.auctions.core.utils import (
-    SANDBOX_MODE, TZ, calculate_business_date, get_request_from_root, get_now,
-    AUCTIONS_COMPLAINT_STAND_STILL_TIME as COMPLAINT_STAND_STILL_TIME, get_auction_creation_date
+    AUCTIONS_COMPLAINT_STAND_STILL_TIME as COMPLAINT_STAND_STILL_TIME,
+    SANDBOX_MODE,
+    TZ,
+    calculate_business_date,
+    get_auction_creation_date,
+    get_now,
+    get_request_from_root,
 )
 
 from .constants import (
