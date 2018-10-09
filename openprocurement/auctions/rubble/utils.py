@@ -13,7 +13,6 @@ from openprocurement.auctions.core.utils import (
 from .constants import (
     DOCUMENT_TYPE_URL_ONLY,
     DOCUMENT_TYPE_OFFLINE,
-    MINIMAL_PERIOD_FROM_RECTIFICATION_END
 )
 from openprocurement.auctions.core.interfaces import IAuctionManager
 
