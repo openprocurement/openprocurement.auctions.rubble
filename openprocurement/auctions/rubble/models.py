@@ -42,6 +42,7 @@ from openprocurement.auctions.core.utils import (
     get_auction_creation_date,
     get_now,
     get_request_from_root,
+    generate_rectificationPeriod_tender_period_margin,
 )
 
 from .constants import (
@@ -50,7 +51,6 @@ from .constants import (
     MINIMAL_EXPOSITION_REQUIRED_FROM,
     MINIMAL_PERIOD_FROM_RECTIFICATION_END
 )
-from .utils import generate_rectificationPeriod
 
 
 def bids_validation_wrapper(validation_func):
@@ -223,7 +223,7 @@ class Auction(BaseAuction):
         self.enquiryPeriod.endDate = end_date
         self.tenderPeriod.endDate = self.enquiryPeriod.endDate
         if not self.rectificationPeriod:
-            self.rectificationPeriod = generate_rectificationPeriod(self)
+            self.rectificationPeriod = generate_rectificationPeriod_tender_period_margin(self)
         self.rectificationPeriod.startDate = now
         self.auctionPeriod.startDate = None
         self.auctionPeriod.endDate = None
