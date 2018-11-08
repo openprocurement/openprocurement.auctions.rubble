@@ -1157,6 +1157,21 @@ def one_valid_bid_auction(self):
     self.db.save(auction)
     # sign contract
     self.app.authorization = ('Basic', ('broker', ''))
+    response = self.app.patch_json(
+        '/auctions/{}/contracts/{}?acc_token={}'.format(
+            auction_id, contract_id, owner_token
+        ),
+        {
+            "data": {
+                "value": {
+                    "currency": "UAH",
+                    "amount": 500,
+                    "valueAddedTaxIncluded": True,
+                },
+            }
+        },
+        status=200
+    )
     self.app.patch_json('/auctions/{}/contracts/{}?acc_token={}'.format(auction_id, contract_id, owner_token), {"data": {"status": "active"}})
     # check status
     self.app.authorization = ('Basic', ('broker', ''))
@@ -1362,6 +1377,21 @@ def first_bid_auction(self):
     self.db.save(auction)
     # sign contract
     self.app.authorization = ('Basic', ('broker', ''))
+    response = self.app.patch_json(
+        '/auctions/{}/contracts/{}?acc_token={}'.format(
+            auction_id, contract_id, owner_token
+        ),
+        {
+            "data": {
+                "value": {
+                    "currency": "UAH",
+                    "amount": 500,
+                    "valueAddedTaxIncluded": True,
+                },
+            }
+        },
+        status=200
+    )
     self.app.patch_json('/auctions/{}/contracts/{}?acc_token={}'.format(auction_id, contract_id, owner_token), {"data": {"status": "active"}})
     # check status
     self.app.authorization = ('Basic', ('broker', ''))
