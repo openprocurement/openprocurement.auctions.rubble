@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
 import unittest
-# from calendar import monthrange
-# from copy import deepcopy
-# from datetime import datetime, timedelta, time, date
-# from uuid import uuid4
-# from iso8601 import parse_date
-# import pytz
 
 from openprocurement.auctions.rubble.models import (
     RubbleOther,
