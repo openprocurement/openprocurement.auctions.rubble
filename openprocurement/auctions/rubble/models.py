@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta, time
 
 from schematics.exceptions import ValidationError
-from schematics.transforms import blacklist, whitelist
+from schematics.transforms import whitelist
 from schematics.types import StringType, IntType, BooleanType
 from schematics.types.compound import ModelType
 from schematics.types.serializable import serializable
@@ -11,7 +11,6 @@ from zope.interface import implementer
 
 from openprocurement.auctions.core.includeme import IAwardingNextCheck
 from openprocurement.auctions.core.models import (
-    Administrator_role,
     Auction as BaseAuction,
     Bid as BaseBid,
     FinancialOrganization,
@@ -20,17 +19,18 @@ from openprocurement.auctions.core.models import (
     ListType,
     Lot,
     Period,
-    auction_embedded_role,
     calc_auction_end_time,
     dgfCDB2Complaint,
     dgfCDB2Document,
     dgfCDB2Item,
     dgfCancellation,
-    edit_role,
     get_auction,
     validate_items_uniq,
     validate_lots_uniq,
     validate_not_available,
+)
+from openprocurement.auctions.core.models.roles import (
+    rubble_auction_roles,
 )
 from openprocurement.auctions.core.plugins.awarding.v2_1.models import Award
 from openprocurement.auctions.core.plugins.contracting.v2_1.models import Contract
@@ -127,39 +127,6 @@ class RectificationPeriod(Period):
     invalidationDate = IsoDateTimeType()
 
 
-create_role = (blacklist(
-    '_attachments',
-    'auctionID',
-    'auctionUrl',
-    'awardCriteria',
-    'awardPeriod',
-    'awards',
-    'bids',
-    'cancellations',
-    'complaints',
-    'contracts',
-    'date',
-    'dateModified',
-    'doc_id',
-    'documents',
-    'eligibilityCriteria',
-    'eligibilityCriteria_en',
-    'eligibilityCriteria_ru',
-    'enquiryPeriod',
-    'numberOfBidders',
-    'owner',
-    'procurementMethod',
-    'questions',
-    'revisions',
-    'status',
-    'submissionMethod',
-    'tenderPeriod'
-) + auction_embedded_role)
-
-edit_role = (edit_role + blacklist('enquiryPeriod', 'tenderPeriod', 'auction_value', 'auction_minimalStep', 'auction_guarantee', 'eligibilityCriteria', 'eligibilityCriteria_en', 'eligibilityCriteria_ru', 'awardCriteriaDetails', 'awardCriteriaDetails_en', 'awardCriteriaDetails_ru', 'procurementMethodRationale', 'procurementMethodRationale_en', 'procurementMethodRationale_ru', 'submissionMethodDetails', 'submissionMethodDetails_en', 'submissionMethodDetails_ru', 'minNumberOfQualifiedBids'))
-Administrator_role = (Administrator_role + whitelist('awards'))
-
-
 class IRubbleOtherAuction(IAuction):
     """Marker interface for RubbleOther auctions"""
 
@@ -172,11 +139,7 @@ class IRubbleFinancialAuction(IAuction):
 class Auction(BaseAuction):
     """Data regarding auction process - publicly inviting prospective contractors to submit bids for evaluation and selecting a winner or winners."""
     class Options:
-        roles = {
-            'create': create_role,
-            'edit_active.tendering': (blacklist('enquiryPeriod', 'tenderPeriod', 'rectificationPeriod', 'auction_value', 'auction_minimalStep', 'auction_guarantee', 'eligibilityCriteria', 'eligibilityCriteria_en', 'eligibilityCriteria_ru', 'minNumberOfQualifiedBids') + edit_role),
-            'Administrator': (whitelist('rectificationPeriod') + Administrator_role),
-        }
+        roles = rubble_auction_roles
 
     def __local_roles__(self):
         roles = dict([('{}_{}'.format(self.owner, self.owner_token), 'auction_owner')])
@@ -317,6 +280,7 @@ class dgfFinCDB2Document(dgfCDB2Document):
         'auctionProtocol', 'x_dgfAssetFamiliarization',
         'x_presentation', 'x_nda',
     ])
+
 
 dgfFinCDB2Document.__name__ = 'Document'
 
