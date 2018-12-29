@@ -4,6 +4,7 @@ from openprocurement.auctions.core.utils import (
     error_handler,
     generate_rectificationPeriod_tender_period_margin,
     get_now,
+    utcoffset_difference,
 )
 
 
@@ -26,3 +27,23 @@ def validate_rectification_period_editing(request, **kwargs):
             )
             request.errors.status = 403
             raise error_handler(request)
+
+
+def validate_rectification_period_utcoffset(request, **kwargs):
+    rp = request.validated['auction']['rectificationPeriod']
+    if not rp:
+        return
+    rp_end_date = request.validated['auction']['rectificationPeriod']['endDate']
+    if not rp_end_date:
+        return
+    offset_difference, server_offset_value = utcoffset_difference(rp_end_date)
+    if offset_difference != 0:
+        request.errors.add(
+            'body',
+            'data',
+            'utcoffset of rectificationPeriod.endDate should be equal to 0{0}:00'.format(
+                server_offset_value,
+            )
+        )
+        request.errors.status = 422
+        raise error_handler(request)
