@@ -72,6 +72,16 @@ def bids_validation_wrapper(validation_func):
     return validator
 
 
+class RubbleDocument(dgfCDB2Document):
+    documentOf = StringType(
+        required=True,
+        choices=[
+            'auction',
+            'item',
+            'lot'],
+        default='auction')
+
+
 class Bid(BaseBid):
     class Options:
         roles = {
@@ -79,7 +89,7 @@ class Bid(BaseBid):
         }
 
     status = StringType(choices=['active', 'draft', 'invalid'], default='active')
-    documents = ListType(ModelType(dgfCDB2Document), default=list())
+    documents = ListType(ModelType(RubbleDocument), default=list())
     qualified = BooleanType(required=True, choices=[True])
 
     @bids_validation_wrapper
@@ -88,7 +98,7 @@ class Bid(BaseBid):
 
 
 class Cancellation(dgfCancellation):
-    documents = ListType(ModelType(dgfCDB2Document), default=list())
+    documents = ListType(ModelType(RubbleDocument), default=list())
 
 
 def rounding_shouldStartAfter(start_after, auction, use_from=datetime(2016, 6, 1, tzinfo=TZ)):
@@ -191,7 +201,7 @@ class Auction(BaseAuction):
     complaints = ListType(ModelType(dgfCDB2Complaint), default=list())
     contracts = ListType(ModelType(Contract), default=list())
     dgfID = StringType()
-    documents = ListType(ModelType(dgfCDB2Document), default=list())  # All documents and attachments related to the auction.
+    documents = ListType(ModelType(RubbleDocument), default=list())  # All documents and attachments related to the auction.
     enquiryPeriod = ModelType(Period)  # The period during which enquiries may be made and will be answered.
     rectificationPeriod = ModelType(RectificationPeriod)  # The period during which editing of main procedure fields are allowed
     tenderPeriod = ModelType(Period)  # The period when the auction is open for submissions. The end date is the closing date for auction submissions.
@@ -302,7 +312,7 @@ RubbleOther = Auction
 # Rubble Financial models
 
 
-class dgfFinCDB2Document(dgfCDB2Document):
+class RubbleFinancialDocument(RubbleDocument):
     documentType = StringType(choices=[
         'auctionNotice', 'awardNotice', 'contractNotice',
         'notice', 'biddingDocuments', 'technicalSpecifications',
@@ -318,7 +328,7 @@ class dgfFinCDB2Document(dgfCDB2Document):
         'x_presentation', 'x_nda',
     ])
 
-dgfFinCDB2Document.__name__ = 'Document'
+RubbleFinancialDocument.__name__ = 'Document'
 
 
 class Bid(Bid):
@@ -326,7 +336,7 @@ class Bid(Bid):
         roles = {
             'create': whitelist('value', 'tenderers', 'parameters', 'lotValues', 'status', 'qualified', 'eligible'),
         }
-    documents = ListType(ModelType(dgfFinCDB2Document), default=list())
+    documents = ListType(ModelType(RubbleFinancialDocument), default=list())
     tenderers = ListType(ModelType(FinancialOrganization), required=True, min_size=1, max_size=1)
     eligible = BooleanType(required=True, choices=[True])
 
@@ -335,7 +345,7 @@ class Bid(Bid):
 class Auction(RubbleOther):
     """Data regarding auction process - publicly inviting prospective contractors to submit bids for evaluation and selecting a winner or winners."""
     _internal_type = "rubbleFinancial"
-    documents = ListType(ModelType(dgfFinCDB2Document), default=list())  # All documents and attachments related to the auction.
+    documents = ListType(ModelType(RubbleFinancialDocument), default=list())  # All documents and attachments related to the auction.
     bids = ListType(ModelType(Bid), default=list())
     procurementMethodType = StringType()
     eligibilityCriteria = StringType(default=u"До участі допускаються лише ліцензовані фінансові установи.")
