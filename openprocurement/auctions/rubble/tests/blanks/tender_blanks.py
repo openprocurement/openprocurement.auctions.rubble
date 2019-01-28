@@ -16,7 +16,7 @@ from openprocurement.auctions.rubble.constants import (
   MINIMAL_PERIOD_FROM_RECTIFICATION_END
 )
 from openprocurement.auctions.rubble.models import (
-    DGF_ID_REQUIRED_FROM
+    LOTIDENTIFIER_ID_REQUIRED_FROM
 )
 from openprocurement.auctions.rubble.tests.base import (
     test_financial_organization,
@@ -30,7 +30,7 @@ from openprocurement.auctions.rubble.tests.base import (
 def create_role(self):
     fields = set([
         'awardCriteriaDetails', 'awardCriteriaDetails_en', 'awardCriteriaDetails_ru',
-        'description', 'description_en', 'description_ru', 'dgfID', 'tenderAttempts',
+        'description', 'description_en', 'description_ru', 'lotIdentifier', 'tenderAttempts',
         'features', 'guarantee', 'hasEnquiries', 'items', 'lots', 'minimalStep', 'mode',
         'procurementMethodRationale', 'procurementMethodRationale_en', 'procurementMethodRationale_ru',
         'procurementMethodType', 'procuringEntity', 'minNumberOfQualifiedBids',
@@ -46,7 +46,7 @@ def edit_role(self):
     fields = set([
         'description', 'description_en', 'description_ru',
         'features', 'hasEnquiries', 'items', 'procuringEntity',
-        'value', 'minimalStep', 'guarantee', 'tenderAttempts', 'title_en', 'dgfID', 'title_ru',
+        'value', 'minimalStep', 'guarantee', 'tenderAttempts', 'title_en', 'lotIdentifier', 'title_ru',
         'title'
     ])
     if SANDBOX_MODE:
@@ -299,7 +299,7 @@ def create_auction_invalid(self):
     ])
 
 
-@unittest.skipIf(get_now() < DGF_ID_REQUIRED_FROM, "Can`t create auction without lotIdentifier only from {}".format(DGF_ID_REQUIRED_FROM))
+@unittest.skipIf(get_now() < LOTIDENTIFIER_ID_REQUIRED_FROM, "Can`t create auction without lotIdentifier only from {}".format(LOTIDENTIFIER_ID_REQUIRED_FROM))
 def required_dgf_id(self):
     data = self.initial_data.copy()
     del data['lotIdentifier']

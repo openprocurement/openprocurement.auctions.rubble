@@ -46,7 +46,7 @@ from openprocurement.auctions.core.utils import (
 )
 
 from .constants import (
-    DGF_ID_REQUIRED_FROM,
+    LOTIDENTIFIER_ID_REQUIRED_FROM,
     MINIMAL_EXPOSITION_PERIOD,
     MINIMAL_EXPOSITION_REQUIRED_FROM,
     MINIMAL_PERIOD_FROM_RECTIFICATION_END
@@ -199,7 +199,7 @@ class Auction(BaseAuction):
     cancellations = ListType(ModelType(Cancellation), default=list())
     complaints = ListType(ModelType(dgfCDB2Complaint), default=list())
     contracts = ListType(ModelType(Contract), default=list())
-    dgfID = StringType(serialized_name='lotIdentifier')
+    lotIdentifier = StringType()
     documents = ListType(ModelType(dgfCDB2Document), default=list())  # All documents and attachments related to the auction.
     enquiryPeriod = ModelType(Period)  # The period during which enquiries may be made and will be answered.
     rectificationPeriod = ModelType(RectificationPeriod)  # The period during which editing of main procedure fields are allowed
@@ -260,9 +260,9 @@ class Auction(BaseAuction):
         if value.currency != u'UAH':
             raise ValidationError(u"currency should be only UAH")
 
-    def validate_dgfID(self, data, dgfID):
-        if not dgfID:
-            if get_auction_creation_date(data) > DGF_ID_REQUIRED_FROM:
+    def validate_lotIdentifier(self, data, lotIdentifier):
+        if not lotIdentifier:
+            if get_auction_creation_date(data) > LOTIDENTIFIER_ID_REQUIRED_FROM:
                 raise ValidationError(u'This field is required.')
 
     @serializable(serialize_when_none=False)
