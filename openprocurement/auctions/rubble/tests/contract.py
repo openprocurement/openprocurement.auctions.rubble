@@ -4,44 +4,54 @@ from datetime import timedelta
 
 from openprocurement.auctions.core.tests.contract import (
     AuctionContractDocumentResourceTestMixin,
+    AuctionContractResourceTestMixin,
     Auction2LotContractDocumentResourceTestMixin
 )
 
 from openprocurement.auctions.core.tests.base import snitch
-from openprocurement.auctions.core.plugins.contracting.v2_1.tests.blanks.contract_blanks import (
-    # AuctionContractResourceTest
-    create_auction_contract_invalid,
-    create_auction_contract,
-    create_auction_contract_in_complete_status,
-    patch_auction_contract,
-    get_auction_contract,
-    get_auction_contracts,
-    # Auction2LotContractResourceTest
-    patch_auction_contract_2_lots
-
+from openprocurement.auctions.core.tests.plugins.contracting.v3_1.tests.contract import (
+    AuctionContractV3_1ResourceTestCaseMixin
 )
-from openprocurement.auctions.core.utils import get_now
+from openprocurement.auctions.core.utils import (
+    get_now,
+    get_related_award_of_contract
+)
+
+
+from openprocurement.auctions.rubble.tests.blanks.contract_blanks import (
+    patch_auction_contract_to_active
+)
+
 from openprocurement.auctions.rubble.tests.base import BaseAuctionWebTest, test_auction_data, test_bids, test_lots, test_financial_auction_data, test_financial_bids, test_financial_organization
 
 
-class AuctionContractResourceTest(BaseAuctionWebTest):
+
+
+DOCUMENTS = {
+    'contract': {
+        'name': 'contract_signed.pdf',
+        'type': 'contractSigned',
+        'description': 'contract signed'
+    },
+    'rejection': {
+        'name': 'rejection_protocol.pdf',
+        'type': 'rejectionProtocol',
+        'description': 'rejection protocol'
+    },
+    'act': {
+        'name': 'act.pdf',
+        'type': 'act',
+        'description': 'act'
+    }
+}
+
+
+class AuctionContractResourceTest(BaseAuctionWebTest, AuctionContractResourceTestMixin, AuctionContractV3_1ResourceTestCaseMixin):
     #initial_data = auction_data
     initial_status = 'active.auction'
     initial_bids = test_bids
 
-    test_create_auction_contract_invalid = unittest.skip('option not available')(
-        snitch(create_auction_contract_invalid)
-    )
-    test_create_auction_contract = unittest.skip('option not available')(
-        snitch(create_auction_contract)
-    )
-    test_create_auction_contract_in_complete_status = unittest.skip('option not available')(
-        snitch(create_auction_contract_in_complete_status)
-    )
-    test_patch_auction_contract = snitch(patch_auction_contract)
-    test_get_auction_contract = snitch(get_auction_contract)
-    test_get_auction_contracts = snitch(get_auction_contracts)
-
+    test_patch_auction_contract_to_active = snitch(patch_auction_contract_to_active)
 
     def setUp(self):
         super(AuctionContractResourceTest, self).setUp()
@@ -86,36 +96,71 @@ class AuctionContractResourceTest(BaseAuctionWebTest):
 
         self.app.patch_json('/auctions/{}/awards/{}?acc_token={}'.format(
             self.auction_id, self.award_id, self.auction_token
-        ), {"data": {"status": "pending.payment"}})
+        ), {"data": {"status": "pending"}})
         self.app.patch_json('/auctions/{}/awards/{}?acc_token={}'.format(
             self.auction_id, self.award_id, self.auction_token
         ), {"data": {"status": "active"}})
+        response = self.app.get('/auctions/{}'.format(self.auction_id))
+        auction = response.json['data']
+        self.award_contract_id = auction['contracts'][0]['id']
 
 
 
-@unittest.skip("option not available")
-class Auction2LotContractResourceTest(BaseAuctionWebTest):
-    initial_status = 'active.qualification'
-    initial_bids = test_bids
-    initial_lots = 2 * test_lots
-    test_patch_auction_contract = snitch(patch_auction_contract_2_lots)
+    def upload_contract_document(self, contract, doc_type):
+        # Uploading contract document
+        response = self.app.post('/auctions/{}/contracts/{}/documents?acc_token={}'.format(
+            self.auction_id, contract['id'], self.auction_token
+        ), upload_files=[
+            ('file', DOCUMENTS[doc_type]['name'], 'content')
+        ])
+        self.assertEqual(response.status, '201 Created')
+        self.assertEqual(response.content_type, 'application/json')
+        doc_id = response.json["data"]['id']
+        self.assertIn(doc_id, response.headers['Location'])
+        self.assertEqual(
+            DOCUMENTS[doc_type]['name'], response.json["data"]["title"]
+        )
+
+        # Patching it's documentType to needed one
+        response = self.app.patch_json(
+            '/auctions/{}/contracts/{}/documents/{}?acc_token={}'.format(
+                self.auction_id, contract['id'], doc_id, self.auction_token
+            ),
+            {"data": {
+                "description": DOCUMENTS[doc_type]['description'],
+                "documentType": DOCUMENTS[doc_type]['type']
+            }})
+        self.assertEqual(response.status, '200 OK')
+        self.assertEqual(response.content_type, 'application/json')
+        self.assertEqual(doc_id, response.json["data"]["id"])
+        self.assertIn("documentType", response.json["data"])
+        self.assertEqual(
+            response.json["data"]["documentType"], DOCUMENTS[doc_type]['type']
+        )
+
+    def check_related_award_status(self, contract, status):
+        # Checking related award status
+        response = self.app.get('/auctions/{}/awards'.format(self.auction_id))
+        contract = self.app.get('/auctions/{}/contracts/{}'.format(
+            self.auction_id, contract['id']
+        )).json['data']
+
+        award = get_related_award_of_contract(
+            contract, {'awards': response.json['data']}
+        )
+
+        response = self.app.get('/auctions/{}/awards/{}'.format(
+            self.auction_id, award['id']
+        ))
+        self.assertEqual(response.status, '200 OK')
+        self.assertEqual(response.content_type, 'application/json')
+        self.assertEqual(response.json["data"]["status"], status)
 
 
-    def setUp(self):
-        super(Auction2LotContractResourceTest, self).setUp()
-        # Create award
-        response = self.app.post_json('/auctions/{}/awards'.format(self.auction_id), {'data': {
-            'suppliers': [self.initial_organization],
-            'status': 'pending',
-            'bid_id': self.initial_bids[0]['id'],
-            'lotID': self.initial_lots[0]['id']
-        }})
-        award = response.json['data']
-        self.award_id = award['id']
-        self.app.patch_json('/auctions/{}/awards/{}'.format(self.auction_id, self.award_id), {"data": {"status": "active"}})
 
 
-class AuctionContractDocumentResourceTest(BaseAuctionWebTest, AuctionContractDocumentResourceTestMixin):
+
+class AuctionContractDocumentResourceTest(BaseAuctionWebTest, AuctionContractResourceTestMixin, AuctionContractV3_1ResourceTestCaseMixin):
     #initial_data = auction_data
     initial_status = 'active.auction'
     initial_bids = test_bids
@@ -164,7 +209,7 @@ class AuctionContractDocumentResourceTest(BaseAuctionWebTest, AuctionContractDoc
 
         self.app.patch_json('/auctions/{}/awards/{}?acc_token={}'.format(
             self.auction_id, self.award_id, self.auction_token
-        ), {"data": {"status": "pending.payment"}})
+        ), {"data": {"status": "pending"}})
         self.app.patch_json('/auctions/{}/awards/{}?acc_token={}'.format(
             self.auction_id, self.award_id, self.auction_token
         ), {"data": {"status": "active"}})
@@ -172,48 +217,66 @@ class AuctionContractDocumentResourceTest(BaseAuctionWebTest, AuctionContractDoc
         response = self.app.get('/auctions/{}/contracts'.format(self.auction_id))
         contract = response.json['data'][0]
         self.contract_id = contract['id']
+        response = self.app.get('/auctions/{}'.format(self.auction_id))
+        auction = response.json['data']
+        self.award_contract_id = auction['contracts'][0]['id']
 
 
 
-@unittest.skip("option not available")
-class Auction2LotContractDocumentResourceTest(BaseAuctionWebTest, Auction2LotContractDocumentResourceTestMixin):
-    initial_status = 'active.qualification'
-    initial_bids = test_bids
-    initial_lots = 2 * test_lots
+    def upload_contract_document(self, contract, doc_type):
+        # Uploading contract document
+        response = self.app.post('/auctions/{}/contracts/{}/documents?acc_token={}'.format(
+            self.auction_id, contract['id'], self.auction_token
+        ), upload_files=[
+            ('file', DOCUMENTS[doc_type]['name'], 'content')
+        ])
+        self.assertEqual(response.status, '201 Created')
+        self.assertEqual(response.content_type, 'application/json')
+        doc_id = response.json["data"]['id']
+        self.assertIn(doc_id, response.headers['Location'])
+        self.assertEqual(
+            DOCUMENTS[doc_type]['name'], response.json["data"]["title"]
+        )
 
-    def setUp(self):
-        super(Auction2LotContractDocumentResourceTest, self).setUp()
-        # Create award
-        response = self.app.post_json('/auctions/{}/awards'.format(self.auction_id), {'data': {
-            'suppliers': [self.initial_organization],
-            'status': 'pending',
-            'bid_id': self.initial_bids[0]['id'],
-            'lotID': self.initial_lots[0]['id']
-        }})
-        award = response.json['data']
-        self.award_id = award['id']
-        self.app.patch_json('/auctions/{}/awards/{}'.format(self.auction_id, self.award_id), {"data": {"status": "active"}})
-        # Create contract for award
-        response = self.app.post_json('/auctions/{}/contracts'.format(self.auction_id), {'data': {'title': 'contract title', 'description': 'contract description', 'awardID': self.award_id}})
-        contract = response.json['data']
-        self.contract_id = contract['id']
+        # Patching it's documentType to needed one
+        response = self.app.patch_json(
+            '/auctions/{}/contracts/{}/documents/{}?acc_token={}'.format(
+                self.auction_id, contract['id'], doc_id, self.auction_token
+            ),
+            {"data": {
+                "description": DOCUMENTS[doc_type]['description'],
+                "documentType": DOCUMENTS[doc_type]['type']
+            }})
+        self.assertEqual(response.status, '200 OK')
+        self.assertEqual(response.content_type, 'application/json')
+        self.assertEqual(doc_id, response.json["data"]["id"])
+        self.assertIn("documentType", response.json["data"])
+        self.assertEqual(
+            response.json["data"]["documentType"], DOCUMENTS[doc_type]['type']
+        )
+
+    def check_related_award_status(self, contract, status):
+        # Checking related award status
+        response = self.app.get('/auctions/{}/awards'.format(self.auction_id))
+        contract = self.app.get('/auctions/{}/contracts/{}'.format(
+            self.auction_id, contract['id']
+        )).json['data']
+
+        award = get_related_award_of_contract(
+            contract, {'awards': response.json['data']}
+        )
+
+        response = self.app.get('/auctions/{}/awards/{}'.format(
+            self.auction_id, award['id']
+        ))
+        self.assertEqual(response.status, '200 OK')
+        self.assertEqual(response.content_type, 'application/json')
+        self.assertEqual(response.json["data"]["status"], status)
+
+
 
 
 class FinancialAuctionContractResourceTest(AuctionContractResourceTest):
-    initial_bids = test_financial_bids
-    initial_data = test_financial_auction_data
-    initial_organization = test_financial_organization
-
-
-@unittest.skip("option not available")
-class FinancialAuction2LotContractResourceTest(Auction2LotContractResourceTest):
-    initial_bids = test_financial_bids
-    initial_data = test_financial_auction_data
-    initial_organization = test_financial_organization
-
-
-@unittest.skip("option not available")
-class FinancialAuction2LotContractDocumentResourceTest(Auction2LotContractDocumentResourceTest):
     initial_bids = test_financial_bids
     initial_data = test_financial_auction_data
     initial_organization = test_financial_organization

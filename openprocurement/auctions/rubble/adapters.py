@@ -7,19 +7,24 @@ from openprocurement.auctions.rubble.models import (
     RubbleOther,
     RubbleFinancial
 )
-from openprocurement.auctions.core.plugins.awarding.v2_1.adapters import (
-    AwardingV2_1ConfiguratorMixin
+from openprocurement.auctions.core.plugins.awarding.v3_1.adapters import (
+    AwardingV3_1ConfiguratorMixin
+)
+from openprocurement.auctions.core.plugins.contracting.v3_1.adapters import (
+    ContractingV3_1ConfiguratorMixin
 )
 
 
 class AuctionRubbleOtherConfigurator(AuctionConfigurator,
-                                     AwardingV2_1ConfiguratorMixin):
+                                     AwardingV3_1ConfiguratorMixin,
+                                     ContractingV3_1ConfiguratorMixin):
     name = 'Auction Rubble Configurator'
     model = RubbleOther
 
 
 class AuctionRubbleFinancialConfigurator(AuctionConfigurator,
-                                         AwardingV2_1ConfiguratorMixin):
+                                         AwardingV3_1ConfiguratorMixin,
+                                         ContractingV3_1ConfiguratorMixin):
     name = 'Auction Rubble Configurator'
     model = RubbleFinancial
 
