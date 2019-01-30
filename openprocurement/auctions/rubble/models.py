@@ -34,7 +34,7 @@ from openprocurement.auctions.core.models import (
 )
 
 
-from openprocurement.auctions.core.plugins.awarding.v3_1.models import Award
+from openprocurement.auctions.core.plugins.awarding.vX.models import Award
 from openprocurement.auctions.core.plugins.contracting.v3_1.models import Contract
 
 from openprocurement.auctions.core.models.roles import (

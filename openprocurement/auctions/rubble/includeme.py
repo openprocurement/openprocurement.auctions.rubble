@@ -8,8 +8,8 @@ from openprocurement.auctions.core.includeme import (
     get_evenly_plugins
 )
 from openprocurement.auctions.core.interfaces import IAuctionManager
-from openprocurement.auctions.core.plugins.awarding.v3_1.adapters import (
-    AwardingNextCheckV3_1
+from openprocurement.auctions.core.plugins.awarding.vX.adapters import (
+    AwardingNextCheckVX
 )
 
 from openprocurement.auctions.rubble.adapters import (
@@ -52,7 +52,7 @@ def includeme_other(config, plugin_map):
         IContentConfigurator
     )
     config.registry.registerAdapter(
-        AwardingNextCheckV3_1,
+        AwardingNextCheckVX,
         (IRubbleOtherAuction,),
         IAwardingNextCheck
     )
@@ -95,7 +95,7 @@ def includeme_financial(config, plugin_map):
         IContentConfigurator
     )
     config.registry.registerAdapter(
-        AwardingNextCheckV3_1,
+        AwardingNextCheckVX,
         (IRubbleFinancialAuction,),
         IAwardingNextCheck
     )
