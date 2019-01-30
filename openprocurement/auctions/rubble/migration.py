@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from openprocurement.auctions.core.plugins.awarding.v3_1.migration import (
+from openprocurement.auctions.core.plugins.awarding.v2_1.migration import (
     migrate_awarding_1_0_to_awarding_2_1
 )
 from openprocurement.auctions.core.traversal import Root

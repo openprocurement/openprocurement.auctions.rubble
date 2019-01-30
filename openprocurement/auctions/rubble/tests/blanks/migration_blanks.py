@@ -61,7 +61,7 @@ def migrate_one_pending(self):
     response = self.app.get('/auctions/{}/awards'.format(self.auction_id))
     self.assertEqual(response.status, '200 OK')
     self.assertEqual(response.content_type, 'application/json')
-    self.assertEqual(response.json['data'][1]['status'], u'pending.verification')
+    self.assertEqual(response.json['data'][1]['status'], u'pending')
 
 
 def migrate_one_active(self):
@@ -151,7 +151,7 @@ def migrate_one_active(self):
     response = self.app.get('/auctions/{}/awards'.format(self.auction_id))
     self.assertEqual(response.status, '200 OK')
     self.assertEqual(response.content_type, 'application/json')
-    self.assertEqual(response.json['data'][1]['status'], u'pending.verification')
+    self.assertEqual(response.json['data'][1]['status'], u'pending')
 
 
 def migrate_unsuccessful_pending(self):
