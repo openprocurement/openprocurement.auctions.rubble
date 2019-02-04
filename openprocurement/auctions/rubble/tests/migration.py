@@ -7,7 +7,7 @@ from copy import deepcopy
 from openprocurement.auctions.core.tests.base import snitch
 
 from openprocurement.auctions.rubble.migration import migrate_data, get_db_schema_version, set_db_schema_version, SCHEMA_VERSION
-from openprocurement.auctions.rubble.tests.base import BaseWebTest, BaseAuctionWebTest, test_bids
+from openprocurement.auctions.rubble.tests.base import BaseWebTest, BaseAuctionWebTest, test_bids, test_auction_data
 from openprocurement.auctions.rubble.tests.blanks.migration_blanks import (
     # MigrateTestFrom1To2Bids
     migrate_one_pending,
@@ -28,7 +28,8 @@ from openprocurement.auctions.rubble.tests.blanks.migration_blanks import (
     migrate_awards_number,
     # MigrateTestFrom1To2WithThreeBids
     migrate_unsuccessful_unsuccessful_pending,
-    migrate_unsuccessful_unsuccessful_active
+    migrate_unsuccessful_unsuccessful_active,
+    migrate_dgfId_to_lotIdentefier
 )
 
 
@@ -99,12 +100,18 @@ class MigrateTestFrom1To2WithThreeBids(BaseAuctionWebTest):
         self.db.save(auction)
 
 
+class MigrateTestDgfIdToLotIdentifier(BaseAuctionWebTest):
+    initial_data = test_auction_data
+    test_migrate_dgfId_to_lotIdentefier = snitch(migrate_dgfId_to_lotIdentefier)
+
+
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(MigrateTest))
     suite.addTest(unittest.makeSuite(MigrateTestFrom1To2Bids))
     suite.addTest(unittest.makeSuite(MigrateTestFrom1To2WithTwoBids))
     suite.addTest(unittest.makeSuite(MigrateTestFrom1To2WithThreeBids))
+    suite.addTest(unittest.makeSuite(MigrateTestDgfIdToLotIdentifier))
     return suite
 
 

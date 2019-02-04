@@ -74,3 +74,39 @@ def from0to1(registry):
             docs = []
     if docs:
         registry.db.update(docs)
+
+
+def from1to2(registry):
+    class Request(object):
+        def __init__(self, registry):
+            self.registry = registry
+
+    docs = []
+    procurement_method_types = get_procurement_method_types(
+        registry, ['rubbleOther', 'rubbleFinancial']
+    )
+
+    for item in registry.db.iterview('auctions/all', 2**10, include_docs=True):
+        auction = item.doc
+        if auction['procurementMethodType'] in procurement_method_types:
+            if auction.get('dgfID', None):
+                auction['lotIdentifier'] = auction.pop('dgfID')
+        model = registry.auction_procurementMethodTypes.get(auction['procurementMethodType'])
+        if model:
+            try:
+                auction = model(auction)
+                auction.__parent__ = Request(registry)
+                auction = auction.to_primitive()
+            except:
+                LOGGER.error("Failed migration of auction {} to schema 1.".format(auction.id),
+                             extra={'MESSAGE_ID': 'migrate_data_failed', 'AUCTION_ID': auction.id})
+                print u"failed to migrate {}".format(auction.id)
+            else:
+                auction['dateModified'] = get_now().isoformat()
+                docs.append(auction)
+        if len(docs) >= 2 ** 7: # pragma: no cover
+            registry.db.update(docs)
+            docs = []
+    if docs:
+        registry.db.update(docs)
+

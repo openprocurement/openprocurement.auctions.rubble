@@ -1217,3 +1217,27 @@ def migrate_unsuccessful_unsuccessful_active(self):
     self.assertEqual(auction['awards'][1]['status'], 'unsuccessful')
     self.assertEqual(auction['awards'][2]['status'], 'active')
     self.assertEqual(auction['contracts'][0]['status'], 'pending')
+
+
+def migrate_dgfId_to_lotIdentefier(self):
+    auction = self.db.get(self.auction_id)
+    response = self.app.get('/auctions/{}'.format(self.auction_id))
+
+    db_auction = response.json['data']
+    self.assertEqual(db_auction['lotIdentifier'], auction['lotIdentifier'])
+
+    auction['dgfID'] = auction.pop('lotIdentifier')
+    self.assertEqual(db_auction['lotIdentifier'], auction['dgfID'])
+    self.db.save(auction)
+
+    self.assertTrue('dgfID' in self.db.get(self.auction_id))
+    migrate_data(self.app.app.registry, 2)
+    self.assertFalse('dgfID' in self.db.get(self.auction_id))
+    self.assertTrue('lotIdentifier' in self.db.get(self.auction_id))
+
+    response = self.app.get('/auctions/{}'.format(self.auction_id))
+    db_auction = response.json['data']
+    self.assertEqual(response.status, '200 OK')
+    self.assertEqual(response.content_type, 'application/json')
+    lotIdentifier = db_auction.get('lotIdentifier', None)
+    self.assertIsNotNone(lotIdentifier)
