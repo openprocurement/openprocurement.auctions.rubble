@@ -9,6 +9,12 @@ from openprocurement.auctions.core.utils import (
     get_plugins, get_procurement_method_types, get_now
 )
 
+from openprocurement.api.migration import (
+    BaseMigrationsRunner,
+    BaseMigrationStep,
+)
+
+
 LOGGER = logging.getLogger(__name__)
 SCHEMA_VERSION = 1
 SCHEMA_DOC = 'openprocurement_auctions_dgf_schema'
@@ -76,37 +82,34 @@ def from0to1(registry):
         registry.db.update(docs)
 
 
-def from1to2(registry):
-    class Request(object):
-        def __init__(self, registry):
-            self.registry = registry
+class RubbleMigrationsRunner(BaseMigrationsRunner):
 
-    docs = []
-    procurement_method_types = get_procurement_method_types(
-        registry, ['rubbleOther', 'rubbleFinancial']
-    )
+    SCHEMA_VERSION = SCHEMA_VERSION
+    SCHEMA_DOC = SCHEMA_DOC
 
-    for item in registry.db.iterview('auctions/all', 2**10, include_docs=True):
-        auction = item.doc
-        if auction['procurementMethodType'] in procurement_method_types:
-            if auction.get('dgfID', None):
+
+class RenameDgfIdToLotIdentifier(BaseMigrationStep):
+
+    def setUp(self):
+        self.view = 'auctions/all'
+        self.procurement_method_types = ['rubbleOther', 'rubbleFinancial']
+
+    def migrate_document(self, auction):
+        """
+        Rename dgfID field to lotIdentifier in rubbleOther and rubbleFinancial models
+        :param auction:
+        :return: auction if updated else None
+        """
+        if auction['procurementMethodType'] in self.procurement_method_types:
+            if auction.get('dgfID'):
                 auction['lotIdentifier'] = auction.pop('dgfID')
-        model = registry.auction_procurementMethodTypes.get(auction['procurementMethodType'])
-        if model:
-            try:
-                auction = model(auction)
-                auction.__parent__ = Request(registry)
-                auction = auction.to_primitive()
-            except:
-                LOGGER.error("Failed migration of auction {} to schema 1.".format(auction.id),
-                             extra={'MESSAGE_ID': 'migrate_data_failed', 'AUCTION_ID': auction.id})
-                print u"failed to migrate {}".format(auction.id)
-            else:
-                auction['dateModified'] = get_now().isoformat()
-                docs.append(auction)
-        if len(docs) >= 2 ** 7: # pragma: no cover
-            registry.db.update(docs)
-            docs = []
-    if docs:
-        registry.db.update(docs)
+                return auction
+        return None
 
+
+MIGRATION_STEPS = (RenameDgfIdToLotIdentifier, )
+
+
+def migrate(db):
+    runner = RubbleMigrationsRunner(db)
+    runner.migrate(MIGRATION_STEPS)

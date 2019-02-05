@@ -5,7 +5,10 @@ from uuid import uuid4
 
 from openprocurement.auctions.core.utils import get_now
 
-from openprocurement.auctions.rubble.migration import migrate_data
+from openprocurement.auctions.rubble.migration import (
+    migrate_data,
+    migrate
+)
 # MigrateTestFrom1To2Bids
 
 def migrate_one_pending(self):
@@ -1231,7 +1234,7 @@ def migrate_dgfId_to_lotIdentefier(self):
     self.db.save(auction)
 
     self.assertTrue('dgfID' in self.db.get(self.auction_id))
-    migrate_data(self.app.app.registry, 2)
+    migrate(self.db)
     self.assertFalse('dgfID' in self.db.get(self.auction_id))
     self.assertTrue('lotIdentifier' in self.db.get(self.auction_id))
 
