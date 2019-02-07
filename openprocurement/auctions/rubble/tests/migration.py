@@ -6,7 +6,14 @@ from copy import deepcopy
 
 from openprocurement.auctions.core.tests.base import snitch
 
-from openprocurement.auctions.rubble.migration import migrate_data, get_db_schema_version, set_db_schema_version, SCHEMA_VERSION
+from openprocurement.auctions.rubble.migration import (
+    get_db_schema_version,
+    set_db_schema_version,
+    SCHEMA_VERSION,
+    RubbleMigrationsRunner,
+    RenameDgfIdToLotIdentifierStep,
+    MigrateAwardingStep
+)
 from openprocurement.auctions.rubble.tests.base import BaseWebTest, BaseAuctionWebTest, test_bids, test_auction_data
 from openprocurement.auctions.rubble.tests.blanks.migration_blanks import (
     # MigrateTestFrom1To2Bids
@@ -37,11 +44,13 @@ class MigrateTest(BaseWebTest):
 
     def setUp(self):
         super(MigrateTest, self).setUp()
-        migrate_data(self.app.app.registry)
+        self.runner = RubbleMigrationsRunner(self.db)
+        self.steps = (MigrateAwardingStep,)
+        self.runner.migrate(self.steps)
 
     def test_migrate(self):
         self.assertEqual(get_db_schema_version(self.db), SCHEMA_VERSION)
-        migrate_data(self.app.app.registry, 1)
+        self.runner.migrate(self.steps)
         self.assertEqual(get_db_schema_version(self.db), SCHEMA_VERSION)
 
 
@@ -55,7 +64,9 @@ class MigrateTestFrom1To2Bids(BaseAuctionWebTest):
 
     def setUp(self):
         super(MigrateTestFrom1To2Bids, self).setUp()
-        migrate_data(self.app.app.registry)
+        self.runner = RubbleMigrationsRunner(self.db)
+        self.steps = (MigrateAwardingStep, )
+        self.runner.migrate(self.steps)
         set_db_schema_version(self.db, 0)
         auction = self.db.get(self.auction_id)
         auction['bids'][0]['value']['amount'] = auction['value']['amount']
@@ -80,7 +91,9 @@ class MigrateTestFrom1To2WithTwoBids(BaseAuctionWebTest):
 
     def setUp(self):
         super(MigrateTestFrom1To2WithTwoBids, self).setUp()
-        migrate_data(self.app.app.registry)
+        self.runner = RubbleMigrationsRunner(self.db)
+        self.steps = (MigrateAwardingStep, )
+        self.runner.migrate(self.steps)
         set_db_schema_version(self.db, 0)
 
 
@@ -92,7 +105,9 @@ class MigrateTestFrom1To2WithThreeBids(BaseAuctionWebTest):
 
     def setUp(self):
         super(MigrateTestFrom1To2WithThreeBids, self).setUp()
-        migrate_data(self.app.app.registry)
+        self.runner = RubbleMigrationsRunner(self.db)
+        self.steps = (MigrateAwardingStep,)
+        self.runner.migrate(self.steps)
         set_db_schema_version(self.db, 0)
         auction = self.db.get(self.auction_id)
         auction['bids'].append(deepcopy(auction['bids'][0]))
@@ -103,6 +118,12 @@ class MigrateTestFrom1To2WithThreeBids(BaseAuctionWebTest):
 class MigrateTestDgfIdToLotIdentifier(BaseAuctionWebTest):
     initial_data = test_auction_data
     test_migrate_dgfId_to_lotIdentefier = snitch(migrate_dgfId_to_lotIdentefier)
+
+
+    def setUp(self):
+        super(MigrateTestDgfIdToLotIdentifier, self).setUp()
+        self.runner = RubbleMigrationsRunner(self.db)
+        self.steps = (RenameDgfIdToLotIdentifierStep, )
 
 
 def suite():
