@@ -7,9 +7,6 @@ from copy import deepcopy
 from openprocurement.auctions.core.tests.base import snitch
 
 from openprocurement.auctions.rubble.migration import (
-    get_db_schema_version,
-    set_db_schema_version,
-    SCHEMA_VERSION,
     RubbleMigrationsRunner,
     RenameDgfIdToLotIdentifierStep,
     MigrateAwardingStep
@@ -49,9 +46,9 @@ class MigrateTest(BaseWebTest):
         self.runner.migrate(self.steps)
 
     def test_migrate(self):
-        self.assertEqual(get_db_schema_version(self.db), SCHEMA_VERSION)
+        self.assertEqual(self.runner._get_db_schema_version(), self.runner.SCHEMA_VERSION)
         self.runner.migrate(self.steps)
-        self.assertEqual(get_db_schema_version(self.db), SCHEMA_VERSION)
+        self.assertEqual(self.runner._get_db_schema_version(), self.runner.SCHEMA_VERSION)
 
 
 class MigrateTestFrom1To2Bids(BaseAuctionWebTest):
@@ -67,7 +64,7 @@ class MigrateTestFrom1To2Bids(BaseAuctionWebTest):
         self.runner = RubbleMigrationsRunner(self.db)
         self.steps = (MigrateAwardingStep, )
         self.runner.migrate(self.steps)
-        set_db_schema_version(self.db, 0)
+        self.runner._set_db_schema_version(0)
         auction = self.db.get(self.auction_id)
         auction['bids'][0]['value']['amount'] = auction['value']['amount']
         self.db.save(auction)
@@ -94,7 +91,7 @@ class MigrateTestFrom1To2WithTwoBids(BaseAuctionWebTest):
         self.runner = RubbleMigrationsRunner(self.db)
         self.steps = (MigrateAwardingStep, )
         self.runner.migrate(self.steps)
-        set_db_schema_version(self.db, 0)
+        self.runner._set_db_schema_version(0)
 
 
 class MigrateTestFrom1To2WithThreeBids(BaseAuctionWebTest):
@@ -108,7 +105,7 @@ class MigrateTestFrom1To2WithThreeBids(BaseAuctionWebTest):
         self.runner = RubbleMigrationsRunner(self.db)
         self.steps = (MigrateAwardingStep,)
         self.runner.migrate(self.steps)
-        set_db_schema_version(self.db, 0)
+        self.runner._set_db_schema_version(0)
         auction = self.db.get(self.auction_id)
         auction['bids'].append(deepcopy(auction['bids'][0]))
         auction['bids'][-1]['id'] = uuid4().hex

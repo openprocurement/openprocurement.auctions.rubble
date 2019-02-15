@@ -18,17 +18,6 @@ SCHEMA_VERSION = 1
 SCHEMA_DOC = 'openprocurement_auctions_dgf_schema'
 
 
-def get_db_schema_version(db):
-    schema_doc = db.get(SCHEMA_DOC, {"_id": SCHEMA_DOC})
-    return schema_doc.get("version", SCHEMA_VERSION - 1)
-
-
-def set_db_schema_version(db, version):
-    schema_doc = db.get(SCHEMA_DOC, {"_id": SCHEMA_DOC})
-    schema_doc["version"] = version
-    db.save(schema_doc)
-
-
 class RubbleMigrationsRunner(BaseMigrationsRunner):
 
     SCHEMA_VERSION = SCHEMA_VERSION
