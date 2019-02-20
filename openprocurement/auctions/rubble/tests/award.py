@@ -14,7 +14,7 @@ from openprocurement.auctions.core.tests.base import snitch
 from openprocurement.auctions.core.tests.award import (
     AuctionAwardDocumentResourceTestMixin
 )
-from openprocurement.auctions.core.tests.plugins.awarding.vX.tests.award import (
+from openprocurement.auctions.core.tests.plugins.awarding.v3_1.tests.award import (
     AuctionAwardProcessTestMixin,
     CreateAuctionAwardTestMixin
 

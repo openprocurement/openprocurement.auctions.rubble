@@ -28,9 +28,6 @@ from openprocurement.auctions.core.tests.tender import (
     ExtractCredentialsMixin
 )
 from openprocurement.auctions.core.tests.blanks.tender_blanks import (
-    simple_add_auction
-)
-from openprocurement.auctions.core.tests.blanks.tender_blanks import (
     # AuctionResourceTest
     auction_features_invalid,
     auction_features,
@@ -44,7 +41,8 @@ from openprocurement.auctions.core.tests.blanks.tender_blanks import (
     create_auction_draft,
     get_auction,
     auction_not_found,
-    invalid_auction_conditions
+    invalid_auction_conditions,
+    simple_add_auction
 )
 from openprocurement.auctions.rubble.tests.blanks.tender_blanks import (
     # AuctionTest
@@ -136,6 +134,7 @@ class AuctionFieldsEditingTest(BaseAuctionWebTest):
 
 
 class AuctionProcessTest(BaseAuctionWebTest):
+    docservice = True
     test_invalid_auction_conditions = snitch(unittest.skip("option not available")(invalid_auction_conditions))
     test_one_valid_bid_auction = snitch(one_valid_bid_auction)
     test_one_invalid_bid_auction = snitch(one_invalid_bid_auction)

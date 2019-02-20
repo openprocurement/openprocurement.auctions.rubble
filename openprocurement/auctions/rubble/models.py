@@ -34,7 +34,7 @@ from openprocurement.auctions.core.models import (
 )
 
 
-from openprocurement.auctions.core.plugins.awarding.vX.models import Award
+from openprocurement.auctions.core.plugins.awarding.v3_1.models import Award
 from openprocurement.auctions.core.plugins.contracting.v3_1.models import Contract
 
 from openprocurement.auctions.core.models.roles import (
@@ -248,7 +248,7 @@ class Auction(BaseAuction):
         now = get_now()
         start_date = TZ.localize(self.auctionPeriod.startDate.replace(tzinfo=None))
         self.tenderPeriod.startDate = self.enquiryPeriod.startDate = now
-        pause_between_periods = start_date - (start_date.replace(hour=20, minute=0, second=0, microsecond=0) - timedelta(days=1))
+        pause_between_periods = start_date - (start_date.replace(hour=18, minute=0, second=0, microsecond=0) - timedelta(days=1))
         end_date = calculate_business_date(start_date, -pause_between_periods, self)
         self.enquiryPeriod.endDate = end_date
         self.tenderPeriod.endDate = self.enquiryPeriod.endDate
