@@ -32,8 +32,8 @@ from openprocurement.auctions.core.models import (
     validate_lots_uniq,
     validate_not_available,
 )
-from openprocurement.auctions.core.plugins.awarding.v2_1.models import Award
-from openprocurement.auctions.core.plugins.contracting.v2_1.models import Contract
+from openprocurement.auctions.core.plugins.awarding.v2_1.models import Award as BaseAward
+from openprocurement.auctions.core.plugins.contracting.v2_1.models import Contract as BaseContract
 from openprocurement.auctions.core.utils import (
     AUCTIONS_COMPLAINT_STAND_STILL_TIME as COMPLAINT_STAND_STILL_TIME,
     SANDBOX_MODE,
@@ -73,13 +73,7 @@ def bids_validation_wrapper(validation_func):
 
 
 class RubbleDocument(dgfCDB2Document):
-    documentOf = StringType(
-        required=True,
-        choices=[
-            'auction',
-            'item',
-            'lot'],
-        default='auction')
+    documentOf = StringType(required=True, choices=['auction', 'item', 'lot', 'tender'], default='auction')
 
 
 class Bid(BaseBid):
@@ -95,6 +89,14 @@ class Bid(BaseBid):
     @bids_validation_wrapper
     def validate_value(self, data, value):
         BaseBid._validator_functions['value'](self, data, value)
+
+
+class Award(BaseAward):
+    documents = ListType(ModelType(RubbleDocument), default=list())
+
+
+class Contract(BaseContract):
+    documents = ListType(ModelType(RubbleDocument), default=list())
 
 
 class Cancellation(dgfCancellation):
