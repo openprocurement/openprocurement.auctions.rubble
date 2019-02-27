@@ -503,7 +503,7 @@ def post_auction_one_invalid_bid(self):
 
     self.assertEqual('active.qualification', auction["status"])
 
-    for i, status in enumerate(['pending.verification', 'pending.waiting']):
+    for i, status in enumerate(['pending', 'pending.waiting']):
         self.assertIn("tenderers", auction["bids"][i])
         self.assertIn("name", auction["bids"][i]["tenderers"][0])
         # self.assertIn(auction["awards"][0]["id"], response.headers['Location'])
@@ -511,7 +511,7 @@ def post_auction_one_invalid_bid(self):
         self.assertEqual(auction["awards"][i]['value']['amount'], bids[i]['value']['amount'])
         self.assertEqual(auction["awards"][i]['suppliers'], bids[i]['tenderers'])
         self.assertEqual(auction["awards"][i]['status'], status)
-        if status == 'pending.verification':
+        if status == 'pending':
             self.assertIn("verificationPeriod", auction["awards"][i])
 
 
@@ -541,7 +541,7 @@ def post_auction_one_valid_bid(self):
 
     self.assertEqual('active.qualification', auction["status"])
 
-    for i, status in enumerate(['pending.verification', 'unsuccessful']):
+    for i, status in enumerate(['pending', 'unsuccessful']):
         self.assertIn("tenderers", auction["bids"][i])
         self.assertIn("name", auction["bids"][i]["tenderers"][0])
         # self.assertIn(auction["awards"][0]["id"], response.headers['Location'])
@@ -549,7 +549,7 @@ def post_auction_one_valid_bid(self):
         self.assertEqual(auction["awards"][i]['value']['amount'], bids[i]['value']['amount'])
         self.assertEqual(auction["awards"][i]['suppliers'], bids[i]['tenderers'])
         self.assertEqual(auction["awards"][i]['status'], status)
-        if status == 'pending.verification':
+        if status == 'pending':
             self.assertIn("verificationPeriod", auction["awards"][i])
 
 

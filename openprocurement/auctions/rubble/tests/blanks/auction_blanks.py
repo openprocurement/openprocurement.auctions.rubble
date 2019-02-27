@@ -70,7 +70,7 @@ def post_auction_auction(self):
     self.assertEqual(auction["bids"][0]['value']['amount'], patch_data["bids"][1]['value']['amount'])
     self.assertEqual(auction["bids"][1]['value']['amount'], patch_data["bids"][0]['value']['amount'])
     self.assertEqual('active.qualification', auction["status"])
-    for i, status in enumerate(['pending.verification', 'pending.waiting']):
+    for i, status in enumerate(['pending', 'pending.waiting']):
         self.assertIn("tenderers", auction["bids"][i])
         self.assertIn("name", auction["bids"][i]["tenderers"][0])
         # self.assertIn(auction["awards"][0]["id"], response.headers['Location'])
@@ -78,7 +78,7 @@ def post_auction_auction(self):
         self.assertEqual(auction["awards"][i]['value']['amount'], patch_data["bids"][i]['value']['amount'])
         self.assertEqual(auction["awards"][i]['suppliers'], self.initial_bids[i]['tenderers'])
         self.assertEqual(auction["awards"][i]['status'], status)
-        if status == 'pending.verification':
+        if status == 'pending':
             self.assertIn("verificationPeriod", auction["awards"][i])
 
     response = self.app.post_json('/auctions/{}/auction'.format(self.auction_id), {'data': patch_data}, status=403)
@@ -165,7 +165,7 @@ def post_auction_auction_lot(self):
     self.assertEqual(auction["bids"][0]['lotValues'][0]['value']['amount'], patch_data["bids"][1]['lotValues'][0]['value']['amount'])
     self.assertEqual(auction["bids"][1]['lotValues'][0]['value']['amount'], patch_data["bids"][0]['lotValues'][0]['value']['amount'])
     self.assertEqual('active.qualification', auction["status"])
-    for i, status in enumerate(['pending.verification', 'pending.waiting']):
+    for i, status in enumerate(['pending', 'pending.waiting']):
         self.assertIn("tenderers", auction["bids"][i])
         self.assertIn("name", auction["bids"][i]["tenderers"][0])
         # self.assertIn(auction["awards"][0]["id"], response.headers['Location'])
@@ -173,7 +173,7 @@ def post_auction_auction_lot(self):
         self.assertEqual(auction["awards"][i]['value']['amount'], patch_data["bids"][i]['lotValues'][0]['value']['amount'])
         self.assertEqual(auction["awards"][i]['suppliers'], self.initial_bids[i]['tenderers'])
         self.assertEqual(auction["awards"][i]['status'], status)
-        if status == 'pending.verification':
+        if status == 'pending':
             self.assertIn("verificationPeriod", auction["awards"][i])
 
     response = self.app.post_json('/auctions/{}/auction'.format(self.auction_id), {'data': patch_data}, status=403)
@@ -276,7 +276,7 @@ def post_auction_auction_2_lots(self):
     self.assertEqual(auction["bids"][0]['lotValues'][0]['value']['amount'], patch_data["bids"][1]['lotValues'][0]['value']['amount'])
     self.assertEqual(auction["bids"][1]['lotValues'][0]['value']['amount'], patch_data["bids"][0]['lotValues'][0]['value']['amount'])
     self.assertEqual('active.qualification', auction["status"])
-    for i, status in enumerate(['pending.verification', 'pending.waiting']):
+    for i, status in enumerate(['pending', 'pending.waiting']):
         self.assertIn("tenderers", auction["bids"][i])
         self.assertIn("name", auction["bids"][i]["tenderers"][0])
         # self.assertIn(auction["awards"][0]["id"], response.headers['Location'])
@@ -284,7 +284,7 @@ def post_auction_auction_2_lots(self):
         self.assertEqual(auction["awards"][i]['value']['amount'], patch_data["bids"][i]['lotValues'][0]['value']['amount'])
         self.assertEqual(auction["awards"][i]['suppliers'], self.initial_bids[i]['tenderers'])
         self.assertEqual(auction["awards"][i]['status'], status)
-        if status == 'pending.verification':
+        if status == 'pending':
             self.assertIn("verificationPeriod", auction["awards"][i])
 
     response = self.app.post_json('/auctions/{}/auction'.format(self.auction_id), {'data': patch_data}, status=403)

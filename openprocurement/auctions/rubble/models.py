@@ -24,7 +24,7 @@ from openprocurement.auctions.core.models import (
     calc_auction_end_time,
     dgfCDB2Complaint,
     dgfCDB2Document,
-    dgfCDB2Item,
+    dgfCDB2Item as Item,
     dgfCancellation,
     edit_role,
     get_auction,
@@ -32,8 +32,11 @@ from openprocurement.auctions.core.models import (
     validate_lots_uniq,
     validate_not_available,
 )
-from openprocurement.auctions.core.plugins.awarding.v2_1.models import Award
-from openprocurement.auctions.core.plugins.contracting.v2_1.models import Contract
+
+
+from openprocurement.auctions.core.plugins.awarding.v3_1.models import Award
+from openprocurement.auctions.core.plugins.contracting.v3_1.models import Contract
+
 from openprocurement.auctions.core.utils import (
     AUCTIONS_COMPLAINT_STAND_STILL_TIME as COMPLAINT_STAND_STILL_TIME,
     SANDBOX_MODE,
@@ -168,6 +171,17 @@ class IRubbleFinancialAuction(IAuction):
     """Marker interface for RubbleFinancial auctions"""
 
 
+class RubbleAward(Award):
+    items = ListType(ModelType(Item))
+
+    VERIFY_AUCTION_PROTOCOL_TIME = timedelta(days=6)
+    CONTRACT_SIGNING_TIME = timedelta(days=20)
+
+
+class RubbleContract(Contract):
+    items = ListType(ModelType(Item))
+
+
 @implementer(IRubbleOtherAuction)
 class Auction(BaseAuction):
     """Data regarding auction process - publicly inviting prospective contractors to submit bids for evaluation and selecting a winner or winners."""
@@ -185,11 +199,11 @@ class Auction(BaseAuction):
         return roles
 
     _internal_type = "rubbleOther"
-    awards = ListType(ModelType(Award), default=list())
+    awards = ListType(ModelType(RubbleAward), default=list())
     bids = ListType(ModelType(Bid), default=list())  # A list of all the companies who entered submissions for the auction.
     cancellations = ListType(ModelType(Cancellation), default=list())
     complaints = ListType(ModelType(dgfCDB2Complaint), default=list())
-    contracts = ListType(ModelType(Contract), default=list())
+    contracts = ListType(ModelType(RubbleContract), default=list())
     dgfID = StringType()
     documents = ListType(ModelType(dgfCDB2Document), default=list())  # All documents and attachments related to the auction.
     enquiryPeriod = ModelType(Period)  # The period during which enquiries may be made and will be answered.
@@ -200,7 +214,7 @@ class Auction(BaseAuction):
     procurementMethodType = StringType()
     status = StringType(choices=['draft', 'active.tendering', 'active.auction', 'active.qualification', 'active.awarded', 'complete', 'cancelled', 'unsuccessful'], default='active.tendering')
     lots = ListType(ModelType(Lot), default=list(), validators=[validate_lots_uniq, validate_not_available])
-    items = ListType(ModelType(dgfCDB2Item), required=True, min_size=1, validators=[validate_items_uniq])
+    items = ListType(ModelType(Item), required=True, min_size=1, validators=[validate_items_uniq])
     minNumberOfQualifiedBids = IntType(choices=[1, 2])
 
     def __acl__(self):
