@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from openprocurement.auctions.core.plugins.awarding.v2_1.migration import (
-    migrate_awarding_1_0_to_awarding_2_1
+from openprocurement.auctions.core.plugins.awarding.v3.migration import (
+    migrate_awarding2_to_awarding3
 )
 from openprocurement.auctions.core.traversal import Root
 from openprocurement.auctions.core.utils import (
-    get_plugins, get_procurement_method_types, get_now
+    get_now, get_plugins, get_procurement_method_types
 )
 
 LOGGER = logging.getLogger(__name__)
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 SCHEMA_DOC = 'openprocurement_auctions_dgf_schema'
 
 
@@ -26,7 +26,6 @@ def set_db_schema_version(db, version):
 
 
 def migrate_data(registry, destination=None):
-    registry.app_meta.plugins
     plugins_config = registry.app_meta.plugins
     existing_plugins = get_plugins(plugins_config)
     if registry.app_meta.plugins and not any(existing_plugins):
@@ -51,13 +50,15 @@ def from0to1(registry):
 
     request = Request(registry)
     root = Root(request)
-    procurement_method_types = get_procurement_method_types(
-        registry, ['rubbleOther', 'rubbleFinancial']
-    )
+    procurement_method_types = get_procurement_method_types(registry, ('rubbleOther', 'rubbleFinancial'))
+
     docs = []
     for i in results:
         auction = i.doc
-        migrate_awarding_1_0_to_awarding_2_1(auction, procurement_method_types)
+
+        changed = migrate_awarding2_to_awarding3(auction, registry.server_id, procurement_method_types)
+        if not changed:
+            continue
         model = registry.auction_procurementMethodTypes.get(auction['procurementMethodType'])
         if model:
             try:
@@ -67,6 +68,60 @@ def from0to1(registry):
             except: # pragma: no cover
                 LOGGER.error("Failed migration of auction {} to schema 1.".format(auction.id), extra={'MESSAGE_ID': 'migrate_data_failed', 'AUCTION_ID': auction.id})
             else:
+                auction['dateModified'] = get_now().isoformat()
+                docs.append(auction)
+        if len(docs) >= 2 ** 7:  # pragma: no cover
+            registry.db.update(docs)
+            docs = []
+    if docs:
+        registry.db.update(docs)
+
+
+def from1to2(registry):
+    class Request(object):
+        def __init__(self, registry):
+            self.registry = registry
+
+    results = registry.db.iterview('auctions/all', 2 ** 10, include_docs=True)
+
+    request = Request(registry)
+    root = Root(request)
+
+    docs = []
+    for i in results:
+        auction = i.doc
+
+        procurement_method_types = get_procurement_method_types(registry, ('rubbleOther', 'rubbleFinancial'))
+
+        if auction['procurementMethodType'] not in procurement_method_types or auction['status'] != 'active.awarded' or 'contracts' not in auction:
+            continue
+        changed = False
+        contract = filter(lambda x: x['status'] == 'pending', auction['contracts'])[0]
+        award = filter(lambda x: x['id'] == contract['awardID'], auction['awards'])[0]
+
+        if not award['complaintPeriod'].get('endDate', False):
+            award['complaintPeriod']['endDate'] = contract['date']
+            changed = True
+
+        if not auction['awardPeriod'].get('endDate', False):
+            auction['awardPeriod']['endDate'] = contract['date']
+            changed = True
+
+        if not changed:
+            continue
+
+        auction_id = auction['_id']
+
+        model = registry.auction_procurementMethodTypes.get(auction['procurementMethodType'])
+        if model:
+            try:
+                auction = model(auction)
+                auction.__parent__ = root
+                auction = auction.to_primitive()
+            except: # pragma: no cover
+                LOGGER.error("Failed migration of auction {} to schema 2.".format(auction_id), extra={'MESSAGE_ID': 'migrate_data_failed', 'AUCTION_ID': auction_id})
+            else:
+                LOGGER.info("Auction {} migrated to schema 2.".format(auction_id), extra={'MESSAGE_ID': 'migrate_data', 'AUCTION_ID': auction_id})
                 auction['dateModified'] = get_now().isoformat()
                 docs.append(auction)
         if len(docs) >= 2 ** 7: # pragma: no cover
