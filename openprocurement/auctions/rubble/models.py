@@ -99,8 +99,24 @@ class Contract(BaseContract):
     documents = ListType(ModelType(RubbleDocument), default=list())
 
 
+class RubbleCancellationDocument(RubbleDocument):
+    documentType = StringType(choices=[
+        'auctionNotice', 'awardNotice', 'contractNotice',
+        'notice', 'biddingDocuments', 'technicalSpecifications',
+        'evaluationCriteria', 'clarifications', 'shortlistedFirms',
+        'riskProvisions', 'billOfQuantity', 'bidders', 'conflictOfInterest',
+        'debarments', 'evaluationReports', 'winningBid', 'complaints',
+        'contractSigned', 'contractArrangements', 'contractSchedule',
+        'contractAnnexe', 'contractGuarantees', 'subContract',
+        'eligibilityCriteria', 'contractProforma', 'commercialProposal',
+        'qualificationDocuments', 'eligibilityDocuments', 'tenderNotice',
+        'illustration', 'auctionProtocol', 'x_dgfAssetFamiliarization',
+        'x_presentation', 'x_nda', 'cancellationDetails'
+    ])
+
+
 class Cancellation(dgfCancellation):
-    documents = ListType(ModelType(RubbleDocument), default=list())
+    documents = ListType(ModelType(RubbleCancellationDocument), default=list())
 
 
 def rounding_shouldStartAfter(start_after, auction, use_from=datetime(2016, 6, 1, tzinfo=TZ)):
