@@ -37,14 +37,6 @@ from openprocurement.auctions.core.models import (
 from openprocurement.auctions.core.plugins.awarding.v3_1.models import Award
 from openprocurement.auctions.core.plugins.contracting.v3_1.models import Contract
 
-from openprocurement.auctions.core.models.roles import (
-    item_roles
-)
-
-from openprocurement.api.models.schematics_extender import (
-    DecimalType,
-)
-
 from openprocurement.auctions.core.utils import (
     AUCTIONS_COMPLAINT_STAND_STILL_TIME as COMPLAINT_STAND_STILL_TIME,
     SANDBOX_MODE,
@@ -179,23 +171,15 @@ class IRubbleFinancialAuction(IAuction):
     """Marker interface for RubbleFinancial auctions"""
 
 
-class RubbleItem(Item):
-
-    quantity = DecimalType(precision=-4, required=True)
-
-    class Options:
-        roles = item_roles
-
-
 class RubbleAward(Award):
-    items = ListType(ModelType(RubbleItem))
+    items = ListType(ModelType(Item))
 
     VERIFY_AUCTION_PROTOCOL_TIME = timedelta(days=6)
     CONTRACT_SIGNING_TIME = timedelta(days=20)
 
 
 class RubbleContract(Contract):
-    items = ListType(ModelType(RubbleItem))
+    items = ListType(ModelType(Item))
 
 
 @implementer(IRubbleOtherAuction)
@@ -230,7 +214,7 @@ class Auction(BaseAuction):
     procurementMethodType = StringType()
     status = StringType(choices=['draft', 'active.tendering', 'active.auction', 'active.qualification', 'active.awarded', 'complete', 'cancelled', 'unsuccessful'], default='active.tendering')
     lots = ListType(ModelType(Lot), default=list(), validators=[validate_lots_uniq, validate_not_available])
-    items = ListType(ModelType(RubbleItem), required=True, min_size=1, validators=[validate_items_uniq])
+    items = ListType(ModelType(Item), required=True, min_size=1, validators=[validate_items_uniq])
     minNumberOfQualifiedBids = IntType(choices=[1, 2])
 
     def __acl__(self):
@@ -248,7 +232,7 @@ class Auction(BaseAuction):
         now = get_now()
         start_date = TZ.localize(self.auctionPeriod.startDate.replace(tzinfo=None))
         self.tenderPeriod.startDate = self.enquiryPeriod.startDate = now
-        pause_between_periods = start_date - (start_date.replace(hour=18, minute=0, second=0, microsecond=0) - timedelta(days=1))
+        pause_between_periods = start_date - (start_date.replace(hour=20, minute=0, second=0, microsecond=0) - timedelta(days=1))
         end_date = calculate_business_date(start_date, -pause_between_periods, self)
         self.enquiryPeriod.endDate = end_date
         self.tenderPeriod.endDate = self.enquiryPeriod.endDate

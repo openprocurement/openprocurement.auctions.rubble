@@ -416,7 +416,7 @@ def create_auction_auctionPeriod(self):
         self.assertLessEqual((auction_startDate - tender_endDate).total_seconds(), 70)
     else:
         self.assertEqual(parse_date(auction['tenderPeriod']['endDate']).date(), parse_date(data['auctionPeriod']['startDate'], TZ).date() - timedelta(days=1))
-        self.assertEqual(parse_date(auction['tenderPeriod']['endDate']).time(), time(18, 0))
+        self.assertEqual(parse_date(auction['tenderPeriod']['endDate']).time(), time(20, 0))
 
 
 def create_auction_rectificationPeriod_generated(self):
