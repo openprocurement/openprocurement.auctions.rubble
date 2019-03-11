@@ -11,9 +11,7 @@ from openprocurement.auctions.core.utils import (
 
 from openprocurement.api.migration import (
     BaseMigrationsRunner,
-    BaseMigrationStep,
-    MigrationResourcesDTO,
-    AliasesInfoDTO
+    BaseMigrationStep
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -110,8 +108,6 @@ class DocumentOfStep(BaseMigrationStep):
 MIGRATION_STEPS = (DocumentOfStep, )
 
 
-def migrate(db):
-    aliases_info_dto = AliasesInfoDTO(PACKAGE_ALIASES)
-    migration_resource_dto = MigrationResourcesDTO(db, aliases_info_dto)
-    runner = RubbleMigrationsRunner(migration_resource_dto)
+def migrate(resources):
+    runner = RubbleMigrationsRunner(resources)
     runner.migrate(MIGRATION_STEPS)
