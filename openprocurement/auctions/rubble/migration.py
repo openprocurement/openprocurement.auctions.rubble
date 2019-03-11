@@ -6,12 +6,20 @@ from openprocurement.auctions.core.plugins.awarding.v2_1.migration import (
 )
 from openprocurement.auctions.core.traversal import Root
 from openprocurement.auctions.core.utils import (
-    get_plugins, get_procurement_method_types, get_now
+    get_plugins, get_procurement_method_types, get_now, migrate_all_document_of_tender
+)
+
+from openprocurement.api.migration import (
+    BaseMigrationsRunner,
+    BaseMigrationStep
 )
 
 LOGGER = logging.getLogger(__name__)
 SCHEMA_VERSION = 1
 SCHEMA_DOC = 'openprocurement_auctions_dgf_schema'
+PACKAGE_ALIASES = {
+    'openprocurement.auctions.rubble': ['rubbleOther', 'rubbleFinancial']
+}
 
 
 def get_db_schema_version(db):
@@ -74,3 +82,32 @@ def from0to1(registry):
             docs = []
     if docs:
         registry.db.update(docs)
+
+
+class RubbleMigrationsRunner(BaseMigrationsRunner):
+
+    SCHEMA_VERSION = 1
+    SCHEMA_DOC = SCHEMA_DOC
+
+
+class DocumentOfStep(BaseMigrationStep):
+
+    def setUp(self):
+        self.view = 'auctions/all'
+        self.procurement_method_types = self.resources.aliases_info.get_package_aliases(
+            'openprocurement.auctions.rubble'
+        )
+
+    def migrate_document(self, auction):
+        if auction['procurementMethodType'] in self.procurement_method_types:
+            changed = migrate_all_document_of_tender(auction)
+            return auction if changed else None
+        return None
+
+
+MIGRATION_STEPS = (DocumentOfStep, )
+
+
+def migrate(resources):
+    runner = RubbleMigrationsRunner(resources)
+    runner.migrate(MIGRATION_STEPS)
