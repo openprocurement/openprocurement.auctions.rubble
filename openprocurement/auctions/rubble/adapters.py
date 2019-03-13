@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from openprocurement.auctions.core.utils import (
+    validate_with,
+)
 from openprocurement.auctions.core.adapters import (
     AuctionConfigurator,
     AuctionManagerAdapter
@@ -9,6 +12,9 @@ from openprocurement.auctions.rubble.models import (
 )
 from openprocurement.auctions.core.plugins.awarding.v2_1.adapters import (
     AwardingV2_1ConfiguratorMixin
+)
+from openprocurement.auctions.rubble.validation import (
+    validate_rectification_period_utcoffset,
 )
 
 
@@ -26,6 +32,11 @@ class AuctionRubbleFinancialConfigurator(AuctionConfigurator,
 
 class AuctionRubbleOtherManagerAdapter(AuctionManagerAdapter):
 
+    create_validators = (
+        validate_rectification_period_utcoffset,
+    )
+
+    @validate_with(create_validators)
     def create_auction(self, request):
         pass
 

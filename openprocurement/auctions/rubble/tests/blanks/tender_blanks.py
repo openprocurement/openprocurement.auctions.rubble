@@ -2,8 +2,9 @@
 import unittest
 
 from copy import deepcopy
-from datetime import timedelta, time
+from datetime import datetime, timedelta, time
 from iso8601 import parse_date
+from pytz import utc
 
 from openprocurement.auctions.core.constants import (
     DGF_CDB2_CLASSIFICATION_PRECISELY_FROM as CLASSIFICATION_PRECISELY_FROM,
@@ -1417,3 +1418,33 @@ def delete_procurementMethodDetails(self):
 
     response = self.app.get('/auctions/{}'.format(auction['id']))
     self.assertNotIn('procurementMethodDetails', response.json['data'])
+
+
+def patch_rectification_period_end_date_wrong_tz(self):
+    data = deepcopy(self.initial_data)
+    data['guarantee'] = {"amount": 100, "currency": "UAH"}
+    data['status'] = 'draft'
+
+    rp_end = (datetime.now(utc) + timedelta(days=3)).isoformat()
+    data['rectificationPeriod'] = {
+        'endDate': rp_end,
+        'startDate': None
+    }
+
+    response = self.app.post_json('/auctions', {'data': data}, status=422)
+    error_message = response.json['errors'][0]['description']
+    self.assertIn('utcoffset of rectificationPeriod.endDate should be equal', error_message)
+
+
+def patch_rectification_period_end_date_ok(self):
+    data = deepcopy(self.initial_data)
+    data['guarantee'] = {"amount": 100, "currency": "UAH"}
+    data['status'] = 'draft'
+
+    rp_end = (get_now() + timedelta(minutes=1)).isoformat()
+    data['rectificationPeriod'] = {
+        'endDate': rp_end,
+        'startDate': None
+    }
+
+    self.app.post_json('/auctions', {'data': data}, status=201)

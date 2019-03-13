@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
 import unittest
-# from calendar import monthrange
-# from copy import deepcopy
-# from datetime import datetime, timedelta, time, date
-# from uuid import uuid4
-# from iso8601 import parse_date
-# import pytz
 
 from openprocurement.auctions.rubble.models import (
     RubbleOther,
@@ -77,6 +71,8 @@ from openprocurement.auctions.rubble.tests.blanks.tender_blanks import (
     one_valid_bid_auction,
     one_invalid_bid_auction,
     first_bid_auction,
+    patch_rectification_period_end_date_wrong_tz,
+    patch_rectification_period_end_date_ok,
 )
 
 
@@ -195,6 +191,14 @@ class AuctionExtractCredentialsTest(BaseAuctionWebTest, ExtractCredentialsMixin)
     pass
 
 
+class OtherAuctionRectificationPeriodTZTest(BaseAuctionWebTest):
+    initial_data = test_auction_data
+    initial_organization = test_organization
+
+    test_patch_rectification_period_end_date_wrong_tz = snitch(patch_rectification_period_end_date_wrong_tz)
+    test_patch_rectification_period_end_date_ok = snitch(patch_rectification_period_end_date_ok)
+
+
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(AuctionProcessTest))
@@ -206,6 +210,7 @@ def suite():
     suite.addTest(unittest.makeSuite(FinancialAuctionFieldsEditingTest))
     suite.addTest(unittest.makeSuite(FinancialAuctionTest))
     suite.addTest(unittest.makeSuite(AuctionExtractCredentialsTest))
+    suite.addTest(unittest.makeSuite(OtherAuctionRectificationPeriodTZTest))
     return suite
 
 
