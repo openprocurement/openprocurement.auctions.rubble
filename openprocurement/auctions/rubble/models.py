@@ -23,9 +23,9 @@ from openprocurement.auctions.core.models import (
     auction_embedded_role,
     calc_auction_end_time,
     dgfCDB2Complaint,
-    dgfCDB2Document,
+    AuctionDocument,
     dgfCDB2Item,
-    dgfCancellation,
+    AuctionCancellation,
     edit_role,
     get_auction,
     validate_items_uniq,
@@ -72,10 +72,6 @@ def bids_validation_wrapper(validation_func):
     return validator
 
 
-class RubbleDocument(dgfCDB2Document):
-    documentOf = StringType(required=True, choices=['auction', 'item', 'lot', 'tender'], default='auction')
-
-
 class Bid(BaseBid):
     class Options:
         roles = {
@@ -83,7 +79,7 @@ class Bid(BaseBid):
         }
 
     status = StringType(choices=['active', 'draft', 'invalid'], default='active')
-    documents = ListType(ModelType(RubbleDocument), default=list())
+    documents = ListType(ModelType(AuctionDocument), default=list())
     qualified = BooleanType(required=True, choices=[True])
 
     @bids_validation_wrapper
@@ -92,31 +88,11 @@ class Bid(BaseBid):
 
 
 class Award(BaseAward):
-    documents = ListType(ModelType(RubbleDocument), default=list())
+    documents = ListType(ModelType(AuctionDocument), default=list())
 
 
 class Contract(BaseContract):
-    documents = ListType(ModelType(RubbleDocument), default=list())
-
-
-class RubbleCancellationDocument(RubbleDocument):
-    documentType = StringType(choices=[
-        'auctionNotice', 'awardNotice', 'contractNotice',
-        'notice', 'biddingDocuments', 'technicalSpecifications',
-        'evaluationCriteria', 'clarifications', 'shortlistedFirms',
-        'riskProvisions', 'billOfQuantity', 'bidders', 'conflictOfInterest',
-        'debarments', 'evaluationReports', 'winningBid', 'complaints',
-        'contractSigned', 'contractArrangements', 'contractSchedule',
-        'contractAnnexe', 'contractGuarantees', 'subContract',
-        'eligibilityCriteria', 'contractProforma', 'commercialProposal',
-        'qualificationDocuments', 'eligibilityDocuments', 'tenderNotice',
-        'illustration', 'auctionProtocol', 'x_dgfAssetFamiliarization',
-        'x_presentation', 'x_nda', 'cancellationDetails'
-    ])
-
-
-class Cancellation(dgfCancellation):
-    documents = ListType(ModelType(RubbleCancellationDocument), default=list())
+    documents = ListType(ModelType(AuctionDocument), default=list())
 
 
 def rounding_shouldStartAfter(start_after, auction, use_from=datetime(2016, 6, 1, tzinfo=TZ)):
@@ -215,11 +191,11 @@ class Auction(BaseAuction):
     _internal_type = "rubbleOther"
     awards = ListType(ModelType(Award), default=list())
     bids = ListType(ModelType(Bid), default=list())  # A list of all the companies who entered submissions for the auction.
-    cancellations = ListType(ModelType(Cancellation), default=list())
+    cancellations = ListType(ModelType(AuctionCancellation), default=list())
     complaints = ListType(ModelType(dgfCDB2Complaint), default=list())
     contracts = ListType(ModelType(Contract), default=list())
     dgfID = StringType()
-    documents = ListType(ModelType(RubbleDocument), default=list())  # All documents and attachments related to the auction.
+    documents = ListType(ModelType(AuctionDocument), default=list())  # All documents and attachments related to the auction.
     enquiryPeriod = ModelType(Period)  # The period during which enquiries may be made and will be answered.
     rectificationPeriod = ModelType(RectificationPeriod)  # The period during which editing of main procedure fields are allowed
     tenderPeriod = ModelType(Period)  # The period when the auction is open for submissions. The end date is the closing date for auction submissions.
@@ -330,7 +306,7 @@ RubbleOther = Auction
 # Rubble Financial models
 
 
-class RubbleFinancialDocument(RubbleDocument):
+class RubbleFinancialDocument(AuctionDocument):
     documentType = StringType(choices=[
         'auctionNotice', 'awardNotice', 'contractNotice',
         'notice', 'biddingDocuments', 'technicalSpecifications',
@@ -343,7 +319,7 @@ class RubbleFinancialDocument(RubbleDocument):
         'qualificationDocuments', 'eligibilityDocuments', 'tenderNotice',
         'illustration', 'financialLicense', 'virtualDataRoom',
         'auctionProtocol', 'x_dgfAssetFamiliarization',
-        'x_presentation', 'x_nda',
+        'x_presentation', 'x_nda', 'cancellationDetails'
     ])
 
 RubbleFinancialDocument.__name__ = 'Document'
