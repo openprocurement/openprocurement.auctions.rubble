@@ -29,7 +29,7 @@ from openprocurement.auctions.core.utils import connection_mock_config
 DEFAULT_ACCELERATION = 1440
 
 
-now = datetime.now()
+now = get_now()
 test_procuringEntity = test_organization.copy()
 
 test_item = {
