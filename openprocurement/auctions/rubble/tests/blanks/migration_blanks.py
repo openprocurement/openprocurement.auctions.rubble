@@ -385,6 +385,21 @@ def migrate_pending_to_complete(self):
     self.assertEqual(response.content_type, 'application/json')
     self.assertEqual(response.json['data']['status'], u'active.awarded')
 
+    response = self.app.patch_json(
+        '/auctions/{}/contracts/{}?acc_token={}'.format(
+            self.auction_id, contract['id'], self.auction_token
+        ),
+        {
+            "data": {
+                "value": {
+                    "currency": "UAH",
+                    "amount": 500,
+                    "valueAddedTaxIncluded": True,
+                },
+            }
+        },
+        status=200
+    )
     response = self.app.patch_json('/auctions/{}/contracts/{}?acc_token={}'.format(
         self.auction_id, contract['id'], self.auction_token
     ), {"data": {"status": "active"}})
@@ -657,6 +672,21 @@ def migrate_cancelled_pending_to_complete(self):
     self.assertEqual(response.content_type, 'application/json')
     self.assertEqual(response.json['data']['status'], u'active.awarded')
 
+    response = self.app.patch_json(
+        '/auctions/{}/contracts/{}?acc_token={}'.format(
+            self.auction_id, contract['id'], self.auction_token
+        ),
+        {
+            "data": {
+                "value": {
+                    "currency": "UAH",
+                    "amount": 500,
+                    "valueAddedTaxIncluded": True,
+                },
+            }
+        },
+        status=200
+    )
     response = self.app.patch_json('/auctions/{}/contracts/{}?acc_token={}'.format(
         self.auction_id, contract['id'], self.auction_token
     ), {"data": {"status": "active"}})
@@ -680,6 +710,11 @@ def migrate_unsuccessful_pending_to_complete(self):
         "status": "pending",
         "complaintPeriod": {
             "startDate": get_now().isoformat(),
+        },
+        "value": {
+            "currency": "UAH",
+            "amount": 500,
+            "valueAddedTaxIncluded": True,
         }
     }
     unsuccessful_award = deepcopy(pending_award)
@@ -724,6 +759,21 @@ def migrate_unsuccessful_pending_to_complete(self):
     self.assertEqual(response.content_type, 'application/json')
     self.assertEqual(response.json['data']['status'], u'active.awarded')
 
+    response = self.app.patch_json(
+        '/auctions/{}/contracts/{}?acc_token={}'.format(
+            self.auction_id, contract['id'], self.auction_token
+        ),
+        {
+            "data": {
+                "value": {
+                    "currency": "UAH",
+                    "amount": 500,
+                    "valueAddedTaxIncluded": True,
+                },
+            }
+        },
+        status=200
+    )
     response = self.app.patch_json('/auctions/{}/contracts/{}?acc_token={}'.format(
         self.auction_id, contract['id'], self.auction_token
     ), {"data": {"status": "active"}})
@@ -836,6 +886,11 @@ def migrate_cancelled_unsuccessful_pending(self):
         "status": "pending",
         "complaintPeriod": {
             "startDate": get_now().isoformat(),
+        },
+        "value": {
+            "currency": "UAH",
+            "amount": 500,
+            "valueAddedTaxIncluded": True,
         }
     }
     unsuccessful_award = deepcopy(pending_award)
@@ -886,6 +941,21 @@ def migrate_cancelled_unsuccessful_pending(self):
     self.assertEqual(response.content_type, 'application/json')
     self.assertEqual(response.json['data']['status'], u'active.awarded')
 
+    response = self.app.patch_json(
+        '/auctions/{}/contracts/{}?acc_token={}'.format(
+            self.auction_id, contract['id'], self.auction_token
+        ),
+        {
+            "data": {
+                "value": {
+                    "currency": "UAH",
+                    "amount": 500,
+                    "valueAddedTaxIncluded": True,
+                },
+            }
+        },
+        status=200
+    )
     response = self.app.patch_json('/auctions/{}/contracts/{}?acc_token={}'.format(
         self.auction_id, contract['id'], self.auction_token
     ), {"data": {"status": "active"}})
